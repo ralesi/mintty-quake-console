@@ -7,12 +7,27 @@ DetectHiddenWindows, on
 RegRead, cygwinRootDir, HKEY_LOCAL_MACHINE, SOFTWARE\Cygwin\setup, rootdir
 cygwinBinDir := cygwinRootDir . "\bin"
 
+; Read INI
+iniFile := "mintty-quake-console.ini"
+IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
+IniRead, minttyArgs, %iniFile%, General, mintty_args, -
+IniRead, initialHeight, %iniFile%, General, initial_height, 380
+IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
+IfNotExist %iniFile%
+{
+	IniWrite, %minttyPath%, %iniFile%, General, mintty_path
+	IniWrite, %minttyArgs%, %iniFile%, General, mintty_args
+	IniWrite, %initialHeight%, %iniFile%, General, initial_height
+	IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
+}
+
 ; path to mintty (same folder as script), start with default shell
 ; minttyPath := cygwinBinDir . "\mintty.exe -"
-minttyPath := cygwinBinDir . "\mintty.exe /bin/zsh -li"
+; minttyPath := cygwinBinDir . "\mintty.exe /bin/zsh -li"
+minttyPath := minttyPath . " " . minttyArgs
 
 ; initial height of console window
-heightConsoleWindow := 380
+heightConsoleWindow := initialHeight
 
 init()
 {
@@ -70,6 +85,8 @@ toggle()
 Slide(Window, Dir)
 {
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
+	If (Dir = "In") And (Ypos < 0)
+		WinShow %Window%
 	Loop
 	{
 	  If (Dir = "In") And (Ypos >= 0) Or (Dir = "Out") And (Ypos <= (-WinHeight))
@@ -86,9 +103,13 @@ Slide(Window, Dir)
 	}
 	If (Dir = "In") And (Ypos >= 0) 
 	  WinMove, %Window%,,, 0 
+	If (Dir = "Out") And (Ypos <= (-WinHeight))
+		WinHide %Window%
 }
 
-^`::
+Hotkey, %consoleHotkey%, HotkeyLabel
+; ^`::
+HotkeyLabel:
 IfWinExist ahk_pid %hw_mintty%
 {
 	toggle()
