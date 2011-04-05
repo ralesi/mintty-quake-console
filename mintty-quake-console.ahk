@@ -2,6 +2,7 @@
 #SingleInstance force
 SendMode Input
 DetectHiddenWindows, on
+SetWinDelay, 0
 
 ; get path to cygwin from registry
 RegRead, cygwinRootDir, HKEY_LOCAL_MACHINE, SOFTWARE\Cygwin\setup, rootdir
@@ -11,14 +12,18 @@ cygwinBinDir := cygwinRootDir . "\bin"
 iniFile := "mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
-IniRead, initialHeight, %iniFile%, General, initial_height, 380
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
+IniRead, initialHeight, %iniFile%, Display, initial_height, 380
+IniRead, animationStep, %iniFile%, Display, animation_step, 20
+IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IfNotExist %iniFile%
 {
 	IniWrite, %minttyPath%, %iniFile%, General, mintty_path
-	IniWrite, %minttyArgs%, %iniFile%, General, mintty_args
-	IniWrite, %initialHeight%, %iniFile%, General, initial_height
+	IniWrite, %minttyArgs%, %iniFile%, General, mintty_args	
 	IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
+	IniWrite, %initialHeight%, %iniFile%, Display, initial_height
+	IniWrite, %animationStep%, %inifile%, Display, animation_step
+	IniWrite, %animationTimeout%, %iniFile%, Display, animation_timeout
 }
 
 ; path to mintty (same folder as script), start with default shell
@@ -84,6 +89,7 @@ toggle()
 
 Slide(Window, Dir)
 {
+	global animationStep, animationTimeout
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 	If (Dir = "In") And (Ypos < 0)
 		WinShow %Window%
@@ -92,14 +98,13 @@ Slide(Window, Dir)
 	  If (Dir = "In") And (Ypos >= 0) Or (Dir = "Out") And (Ypos <= (-WinHeight))
 		 Break
 	  
-	  ; dY := % (Dir = "In") ? A_Index*Rate - WinHeight : (-A_Index)*Rate
-	  ; dY := % (Dir = "In") ? Ypos + Rate : Ypos - Rate
-	  dRate := WinHeight // 4
+	  ; dRate := WinHeight // 4
+	  dRate := animationStep
+	  ; dY := % (Dir = "In") ? A_Index*dRate - WinHeight : (-A_Index)*dRate
 	  dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
-	  ; OutputDebug, dY=%dY%
 	  WinMove, %Window%,,, dY
 	  WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-	  ; Sleep, %Speed%
+	  Sleep, %animationTimeout%
 	}
 	If (Dir = "In") And (Ypos >= 0) 
 	  WinMove, %Window%,,, 0 
@@ -107,9 +112,9 @@ Slide(Window, Dir)
 		WinHide %Window%
 }
 
-Hotkey, %consoleHotkey%, HotkeyLabel
+Hotkey, %consoleHotkey%, ConsoleHotkey
 ; ^`::
-HotkeyLabel:
+ConsoleHotkey:
 IfWinExist ahk_pid %hw_mintty%
 {
 	toggle()
@@ -118,4 +123,20 @@ else
 {
 	init()
 }
+return
+
+#IfWinActive ahk_class mintty
+; why this method doesn't work, I don't know...
+; Hotkey, IfWinActive, ahk_pid %hw_mintty%
+; Hotkey, ^!NumpadAdd, IncreaseHeight
+; Hotkey, ^!NumpadSub, DecreaseHeight
+; IncreaseHeight:
+^!NumpadAdd::
+	heightConsoleWindow += 10
+	WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
+return
+; DecreaseHeight:
+^!NumpadSub::
+	heightConsoleWindow -= 10
+	WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
 return
