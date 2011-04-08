@@ -140,3 +140,4 @@ return
 	heightConsoleWindow -= 10
 	WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
 return
+#IfWinActive
