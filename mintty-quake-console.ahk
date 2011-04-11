@@ -2,7 +2,7 @@
 #SingleInstance force
 SendMode Input
 DetectHiddenWindows, on
-SetWinDelay, 0
+SetWinDelay, -1
 
 ; get path to cygwin from registry
 RegRead, cygwinRootDir, HKEY_LOCAL_MACHINE, SOFTWARE\Cygwin\setup, rootdir
@@ -55,6 +55,7 @@ init()
 		WinMove, ahk_pid %hw_mintty%, , 0, -%heightConsoleWindow%, A_ScreenWidth, %heightConsoleWindow% ; resize/move
 		WinShow ahk_pid %hw_mintty%
 		WinActivate ahk_pid %hw_mintty%
+		Slide("ahk_pid" . hw_mintty, "In")
 	}
 	else {
 		WinShow ahk_pid %hw_mintty%
@@ -113,7 +114,8 @@ Slide(Window, Dir)
 }
 
 Hotkey, %consoleHotkey%, ConsoleHotkey
-; ^`::
+return
+
 ConsoleHotkey:
 IfWinExist ahk_pid %hw_mintty%
 {
