@@ -1,3 +1,12 @@
+; Mintty quake console: Visor-like functionality for Windows
+; Version: 1.0
+; Author: Jon Rogers (lonepie@gmail.com)
+; URL: https://github.com/lonepie/mintty-quake-console
+; Credits:
+;	Originally forked from https://github.com/marcharding/mintty-quake-console
+; To Do: 
+;	- add script toggle; on exit - return mintty to normal
+
 #NoEnv
 #SingleInstance force
 SendMode Input
