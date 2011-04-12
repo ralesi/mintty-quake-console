@@ -26,7 +26,7 @@ note: after changing the ini file, reload the script by right-clicking the tray 
 ## Tips
 See <http://www.autohotkey.com/docs/Hotkeys.htm> and <http://www.autohotkey.com/docs/KeyList.htm> for Autohotkey reference.
 
-Use **Ctrl+Alt+Numpad + or -** to increase or decrease the console height
+Use **Ctrl+Alt+Numpad(+/-)** to increase or decrease the console height
 
 To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh must be installed through cygwin):
 
