@@ -5,12 +5,13 @@ A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-st
 ## Requirements
 1. [Cygwin](http://www.cygwin.com/)
 2. [mintty](http://code.google.com/p/mintty/) (installed through Cygwin)
-3. *optional* [AutoHotkey](http://www.autohotkey.com/)
 
 ## Usage
 download and run **mintty-quake-console.exe**  
 edit **mintty-quake-console.ini** to specify custom configuration (automatically generated if it doesn't exist)  
 press **ctrk + ~** (or configured keybinding) to toggle console  
+
+note: after changing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
 
 ## Ini/Option Reference
 **mintty_path** = path to mintty.exe  
@@ -24,6 +25,8 @@ press **ctrk + ~** (or configured keybinding) to toggle console
 
 ## Tips
 See <http://www.autohotkey.com/docs/Hotkeys.htm> and <http://www.autohotkey.com/docs/KeyList.htm> for Autohotkey reference.
+
+Use **Ctrl+Alt+Numpad + or -** to increase or decrease the console height
 
 To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh must be installed through cygwin):
 
