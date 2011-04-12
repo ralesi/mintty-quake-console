@@ -26,5 +26,5 @@ press **ctrk + ~** (or configured keybinding) to toggle console
 See <http://www.autohotkey.com/docs/Hotkeys.htm> and <http://www.autohotkey.com/docs/KeyList.htm> for Autohotkey reference.
 
 To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh must be installed through cygwin):
-	mintty_args="/bin/zsh -li"
 
+	mintty_args="/bin/zsh -li"
