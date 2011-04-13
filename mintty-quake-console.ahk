@@ -143,12 +143,17 @@ toggleScript(state) {
 	global
 	; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
 	if(state = "on" or state = "init") {
+		If !WinExist("ahk_pid" . hw_mintty) {
+			init()
+			return
+		}
 		WinHide ahk_pid %hw_mintty%
 		WinSet, Style, -0xC00000, ahk_pid %hw_mintty% ; hide caption/title
 		WinSet, Style, -0x40000, ahk_pid %hw_mintty% ; hide thick border
-		if (state = "init") {
-			if (OrigYpos >= 0)
+		; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
+		if (OrigYpos >= 0 or OrigWinWidth < A_ScreenWidth)
 				WinMove, ahk_pid %hw_mintty%, , 0, -%heightConsoleWindow%, A_ScreenWidth, %heightConsoleWindow% ; resize/move
+		if (state = "init") {
 			if (%startHidden%) {
 				scriptEnabled := True
 				Menu, Tray, Check, Enabled
