@@ -31,3 +31,7 @@ Use **Ctrl+Alt+Numpad(+/-)** to increase or decrease the console height
 To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh must be installed through cygwin):
 
 	mintty_args="/bin/zsh -li"
+
+## TO DO
+* add gui for configuring options
+* add support for putty and/or console2

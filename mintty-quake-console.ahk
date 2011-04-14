@@ -77,6 +77,7 @@ return
 init()
 {
 	global
+	initCount++
 	; get last active window
 	WinGet, hw_current, ID, A
 	if !WinExist("ahk_class mintty") {
@@ -153,18 +154,17 @@ toggleScript(state) {
 		; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
 		if (OrigYpos >= 0 or OrigWinWidth < A_ScreenWidth)
 				WinMove, ahk_pid %hw_mintty%, , 0, -%heightConsoleWindow%, A_ScreenWidth, %heightConsoleWindow% ; resize/move
-		if (state = "init") {
-			if (%startHidden%) {
-				scriptEnabled := True
-				Menu, Tray, Check, Enabled
-				return
-			}
+		
+		scriptEnabled := True
+		Menu, Tray, Check, Enabled
+		
+		if (state = "init" and initCount = 1 and %startHidden%) {
+			return
 		}
+		
 		WinShow ahk_pid %hw_mintty%
 		WinActivate ahk_pid %hw_mintty%
 		Slide("ahk_pid" . hw_mintty, "In")
-		scriptEnabled := True
-		Menu, Tray, Check, Enabled
 	}
 	else if (state = "off") {
 		WinSet, Style, +0xC00000, ahk_pid %hw_mintty% ; show caption/title
