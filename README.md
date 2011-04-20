@@ -8,7 +8,7 @@ A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-st
 
 ## Usage
 download and run **mintty-quake-console.exe**  
-edit **mintty-quake-console.ini** to specify custom configuration (automatically generated if it doesn't exist)  
+**NEW** right click icon in system tray -> options
 press **ctrk + ~** (or configured keybinding) to toggle console  
 
 note: after changing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
@@ -18,8 +18,10 @@ note: after changing the ini file, reload the script by right-clicking the tray 
 **mintty_args** = arguments to pass to mintty.exe  
 **hotkey** = key combination to show/hide console
 
-**start_hidden** = show mintty.exe when script is started (False) or wait for hotkey (True)  
+**start_with_windows** = add this script to Windows startup (1) or disable (0)
+**start_hidden** = show mintty.exe when script is started (0) or wait for hotkey (1)  
 **initial_height** = height (in pixels) of the mintty console  
+**pinned_by_default** = set to 0 to automatically hide mintty when it loses focus
 **animation_step** = number of pixels to shift each step of the slide animation  
 **animation_timeout** = how long (in ms) to wait between each animation_step
 
@@ -33,5 +35,5 @@ To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh m
 	mintty_args="/bin/zsh -li"
 
 ## TO DO
-* add gui for configuring options
+* add gui for configuring options **(done)**
 * add support for putty and/or console2
