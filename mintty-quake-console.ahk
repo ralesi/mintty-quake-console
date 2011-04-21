@@ -42,7 +42,7 @@ IfNotExist %iniFile%
 ; path to mintty (same folder as script), start with default shell
 ; minttyPath := cygwinBinDir . "\mintty.exe -"
 ; minttyPath := cygwinBinDir . "\mintty.exe /bin/zsh -li"
-minttyPath := minttyPath . " " . minttyArgs
+minttyPath_args := minttyPath . " " . minttyArgs
 
 ; initial height of console window
 heightConsoleWindow := initialHeight
@@ -53,8 +53,10 @@ heightConsoleWindow := initialHeight
 Hotkey, %consoleHotkey%, ConsoleHotkey
 
 ;*******************************************************************************
-;				GUI						
+;				Menu					
 ;*******************************************************************************
+if !InStr(A_ScriptName, ".exe")
+	Menu, Tray, Icon, terminal.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
@@ -81,7 +83,7 @@ init()
 	; get last active window
 	WinGet, hw_current, ID, A
 	if !WinExist("ahk_class mintty") {
-		Run %minttyPath%, %cygwinBinDir%, Hide, hw_mintty
+		Run %minttyPath_args%, %cygwinBinDir%, Hide, hw_mintty
 		WinWait ahk_pid %hw_mintty%
 	}
 	else {
@@ -222,7 +224,7 @@ return
 ExitSub:
 	if A_ExitReason not in Logoff,Shutdown
 	{
-		MsgBox, 4, , Are you sure you want to exit?
+		MsgBox, 4, mintty-quake-console, Are you sure you want to exit?
 		IfMsgBox, No
 			return
 		toggleScript("off")
@@ -304,29 +306,28 @@ CheckWindowsStartup(enable) {
 
 OptionsGui() {
 	global
-	; Gui, Destroy
 	If not WinExist("ahk_id" GuiID) {
-	Gui, Add, GroupBox, x12 y10 w450 h110 , General
-	Gui, Add, GroupBox, x12 y130 w450 h180 , Display
-	Gui, Add, Button, x242 y360 w100 h30 Default, Save
-	Gui, Add, Button, x362 y360 w100 h30 , Cancel
-	Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
-	Gui, Add, Edit, x92 y30 w250 h20 VminttyPath, %minttyPath%
-	Gui, Add, Button, x352 y30 w100 h20, Browse
-	Gui, Add, Text, x22 y60 w100 h20 , Mintty Arguments:
-	Gui, Add, Edit, x122 y60 w330 h20 VminttyArgs, %minttyArgs%
-	Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
-	Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
-	Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
-	Gui, Add, CheckBox, x22 y180 w100 h30 Vpinned Checked%pinned%, Pinned
-	Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
-	Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
-	Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
-	Gui, Add, Text, x232 y170 w220 h20 , Animation Delta (px):
-	Gui, Add, Text, x232 y220 w220 h20 , Animation Time (ms):
-	Gui, Add, Slider, x232 y190 w220 h30 VanimationStep Range5-50, %animationStep%
-	Gui, Add, Slider, x232 y240 w220 h30 VanimationTimeout Range5-50, %animationTimeout%
-	Gui, Add, Text, x232 y280 w220 h20 +Center, Animation Speed = Delta / Time
+		Gui, Add, GroupBox, x12 y10 w450 h110 , General
+		Gui, Add, GroupBox, x12 y130 w450 h180 , Display
+		Gui, Add, Button, x242 y360 w100 h30 Default, Save
+		Gui, Add, Button, x362 y360 w100 h30 , Cancel
+		Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
+		Gui, Add, Edit, x92 y30 w250 h20 VminttyPath, %minttyPath%
+		Gui, Add, Button, x352 y30 w100 h20, Browse
+		Gui, Add, Text, x22 y60 w100 h20 , Mintty Arguments:
+		Gui, Add, Edit, x122 y60 w330 h20 VminttyArgs, %minttyArgs%
+		Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
+		Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
+		Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
+		Gui, Add, CheckBox, x22 y180 w100 h30 Vpinned Checked%pinned%, Pinned
+		Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
+		Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
+		Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
+		Gui, Add, Text, x232 y170 w220 h20 , Animation Delta (px):
+		Gui, Add, Text, x232 y220 w220 h20 , Animation Time (ms):
+		Gui, Add, Slider, x232 y190 w220 h30 VanimationStep Range5-50, %animationStep%
+		Gui, Add, Slider, x232 y240 w220 h30 VanimationTimeout Range5-50, %animationTimeout%
+		Gui, Add, Text, x232 y280 w220 h20 +Center, Animation Speed = Delta / Time
 	}
 	; Generated using SmartGUI Creator 4.0
 	Gui, Show, h410 w482, TerminalHUD Options
@@ -345,7 +346,7 @@ OptionsGui() {
 	ButtonSave:
 		Gui, Submit
 		SaveSettings()
-		; Gui, Destroy
+		Reload
 	return
 	
 	ButtonBrowse:
@@ -357,7 +358,6 @@ OptionsGui() {
 	GuiClose:
 	GuiEscape:
 	ButtonCancel:
-		; Gui, Destroy
 		Gui, Cancel
 	return
 }
