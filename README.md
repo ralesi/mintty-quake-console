@@ -7,8 +7,8 @@ A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-st
 2. [mintty](http://code.google.com/p/mintty/) (installed through Cygwin)
 
 ## Usage
-download and run **mintty-quake-console.exe**  
-**NEW** right click icon in system tray -> options
+download and run **mintty-quake-console.exe**
+right click icon in system tray -> options
 press **ctrk + ~** (or configured keybinding) to toggle console  
 
 note: after changing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
@@ -35,5 +35,4 @@ To use ZSH instead of BASH, set the following in mintty-quake-console.ini (zsh m
 	mintty_args="/bin/zsh -li"
 
 ## TO DO
-* add gui for configuring options **(done)**
-* add support for putty and/or console2
+* add support for putty
