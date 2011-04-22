@@ -8,7 +8,9 @@ A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-st
 
 ## Usage
 download and run **mintty-quake-console.exe**
+
 right click icon in system tray -> "Options"
+
 press **ctrk + ~** (or configured keybinding) to toggle console
 
 note: after manually changing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
