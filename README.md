@@ -1,6 +1,6 @@
 # mintty-quake-console
 
-A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style (like [Visor](http://visor.binaryage.com/) for osx) console for [mintty](http://code.google.com/p/mintty/)
+A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style console for [mintty](http://code.google.com/p/mintty/) (like [Visor](http://visor.binaryage.com/) for OS X)
 
 ## Requirements
 1. [Cygwin](http://www.cygwin.com/)
@@ -8,10 +8,10 @@ A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-st
 
 ## Usage
 download and run **mintty-quake-console.exe**
-right click icon in system tray -> options
-press **ctrk + ~** (or configured keybinding) to toggle console  
+right click icon in system tray -> "Options"
+press **ctrk + ~** (or configured keybinding) to toggle console
 
-note: after changing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
+note: after manually changing the ini file, reload the script by right-clicking the tray icon and selecting **Reload**
 
 ## Ini/Option Reference
 **mintty_path** = path to mintty.exe  
