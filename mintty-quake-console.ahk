@@ -47,6 +47,8 @@ minttyPath_args := minttyPath . " " . minttyArgs
 ; initial height of console window
 heightConsoleWindow := initialHeight
 
+isVisible := False
+
 ;*******************************************************************************
 ;				Hotkeys						
 ;*******************************************************************************
@@ -60,6 +62,7 @@ if !InStr(A_ScriptName, ".exe")
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
+Menu, Tray, Add, Show/Hide, ToggleVisible
 Menu, Tray, Add, Enabled, ToggleScriptState
 Menu, Tray, Check, Enabled
 Menu, Tray, Add, Pinned, TogglePinned
@@ -90,6 +93,11 @@ init()
 		WinGet, hw_mintty, PID, ahk_class mintty
 	}
 	
+	TaskBarEdge := GetTaskbarEdge()
+	ScreenWidth := GetScreenWidth()
+	ScreenTop := GetScreenTop()
+	ScreenLeft := GetScreenLeft()
+	
 	WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
 	toggleScript("init")
 }
@@ -116,34 +124,35 @@ toggle()
 
 Slide(Window, Dir)
 {
-	global animationStep, animationTimeout, pinned
+	global animationStep, animationTimeout, pinned, isVisible, ScreenTop, ScreenLeft, ScreenWidth
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 	If (Dir = "In") And (Ypos < 0)
 		WinShow %Window%
-	If (Xpos != 0)
-		WinMove, %Window%,,0
+	If (Xpos != ScreenLeft)
+		WinMove, %Window%,,ScreenLeft
 	Loop
 	{
-	  If (Dir = "In") And (Ypos >= 0) Or (Dir = "Out") And (Ypos <= (-WinHeight))
+	  If (Dir = "In") And (Ypos >= ScreenTop) Or (Dir = "Out") And (Ypos <= (-WinHeight))
 		 Break
 	  
-	  ; dRate := WinHeight // 4
 	  dRate := animationStep
-	  ; dY := % (Dir = "In") ? A_Index*dRate - WinHeight : (-A_Index)*dRate
 	  dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
 	  WinMove, %Window%,,, dY
 	  WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 	  Sleep, %animationTimeout%
 	}
-	If (Dir = "In") And (Ypos >= 0) {
-		WinMove, %Window%,,, 0 
+
+	If (Dir = "In") And (Ypos >= ScreenTop) {
+		WinMove, %Window%,,, ScreenTop
 		if (!pinned)
 			SetTimer, HideWhenInactive, 250
+		isVisible := True
 	}
 	If (Dir = "Out") And (Ypos <= (-WinHeight)) {
 		WinHide %Window%
 		if (!pinned)
 			SetTimer, HideWhenInactive, Off
+		isVisible := False
 	}
 }
 
@@ -157,11 +166,12 @@ toggleScript(state) {
 			return
 		}
 		WinHide ahk_pid %hw_mintty%
-		WinSet, Style, -0xC00000, ahk_pid %hw_mintty% ; hide caption/title
-		WinSet, Style, -0x40000, ahk_pid %hw_mintty% ; hide thick border
+		;WinSet, Style, -0xC00000, ahk_pid %hw_mintty% ; hide caption/title
+		;WinSet, Style, -0x40000, ahk_pid %hw_mintty% ; hide thick border
+		WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders
 		; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
-		if (OrigYpos >= 0 or OrigWinWidth < A_ScreenWidth)
-				WinMove, ahk_pid %hw_mintty%, , 0, -%heightConsoleWindow%, A_ScreenWidth, %heightConsoleWindow% ; resize/move
+		;if (OrigYpos >= 0 or OrigWinWidth < ScreenWidth)
+				WinMove, ahk_pid %hw_mintty%, , ScreenLeft, -%heightConsoleWindow%, ScreenWidth, %heightConsoleWindow% ; resize/move
 		
 		scriptEnabled := True
 		Menu, Tray, Check, Enabled
@@ -192,6 +202,18 @@ HideWhenInactive:
 	{
 		Slide("ahk_pid" . hw_mintty, "Out")
 		SetTimer, HideWhenInactive, Off
+	}
+return
+
+ToggleVisible:
+	if(isVisible)
+	{
+		Slide("ahk_pid" . hw_mintty, "Out")
+	}
+	else
+	{
+		WinActivate ahk_pid %hw_mintty%
+		Slide("ahk_pid" . hw_mintty, "In")
 	}
 return
 
@@ -361,3 +383,84 @@ OptionsGui() {
 		Gui, Cancel
 	return
 }
+
+;*******************************************************************************
+;				Utility					
+;*******************************************************************************
+; Gets the edge that the taskbar is docked to.  Returns:
+;   "top"
+;   "right"
+;   "bottom"
+;   "left"
+GetTaskbarEdge() {
+  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
+
+  if (TW = A_ScreenWidth) { ; Vertical Taskbar
+    if (TY = 0) {
+      return "top"
+    } else {
+      return "bottom"
+    }
+  } else { ; Horizontal Taskbar
+    if (TX = 0) {
+      return "left"
+    } else {
+      return "right"
+    }
+  }
+}
+
+GetScreenTop() {
+  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
+  TaskbarEdge := GetTaskbarEdge()
+
+  if (TaskbarEdge = "top") {
+    return TH
+  } else {
+    return 0
+  }
+}
+
+GetScreenLeft() {
+  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
+  TaskbarEdge := GetTaskbarEdge()
+
+  if (TaskbarEdge = "left") {
+    return TW
+  } else {
+    return 0
+  }
+}
+
+GetScreenWidth() {
+  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
+  TaskbarEdge := GetTaskbarEdge()
+
+  if (TaskbarEdge = "top" or TaskbarEdge = "bottom") {
+    return A_ScreenWidth
+  } else {
+    return A_ScreenWidth - TW
+  }
+}
+
+GetScreenHeight() {
+  WinGetPos,TX,TY,TW,TH,ahk_class Shell_TrayWnd,,,
+  TaskbarEdge := GetTaskbarEdge()
+
+  if (TaskbarEdge = "top" or TaskbarEdge = "bottom") {
+    return A_ScreenHeight - TH
+  } else {
+    return A_ScreenHeight
+  }
+}
+/*
+ResizeAndCenter(w, h)
+{
+  ScreenX := GetScreenLeft()
+  ScreenY := GetScreenTop()
+  ScreenWidth := GetScreenWidth()
+  ScreenHeight := GetScreenHeight()
+
+  WinMove A,,ScreenX + (ScreenWidth/2)-(w/2),ScreenY + (ScreenHeight/2)-(h/2),w,h
+}
+*/
