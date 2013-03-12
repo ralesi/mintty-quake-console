@@ -24,13 +24,14 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;				Preferences & Variables
 ;*******************************************************************************
 VERSION := 1.1
-iniFile := "mintty-quake-console.ini"
+iniFile := A_ScriptDir . "\mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, initialHeight, %iniFile%, Display, initial_height, 380
+IniRead, initialWidth, %iniFile%, Display, initial_width, 90
 IniRead, pinned, %iniFile%, Display, pinned_by_default, 1
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
@@ -58,11 +59,13 @@ Hotkey, %consoleHotkey%, ConsoleHotkey
 ;				Menu					
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
-	Menu, Tray, Icon, terminal.ico
+	Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
+Menu, Tray, Click, 1
 Menu, Tray, Add, Show/Hide, ToggleVisible
+Menu, Tray, Default, Show/Hide
 Menu, Tray, Add, Enabled, ToggleScriptState
 Menu, Tray, Check, Enabled
 Menu, Tray, Add, Pinned, TogglePinned
@@ -128,8 +131,8 @@ Slide(Window, Dir)
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
 	If (Dir = "In") And (Ypos < 0)
 		WinShow %Window%
-	If (Xpos != ScreenLeft)
-		WinMove, %Window%,,ScreenLeft
+	; If (Xpos != ScreenLeft)
+	; 	WinMove, %Window%,,ScreenLeft
 	Loop
 	{
 	  If (Dir = "In") And (Ypos >= ScreenTop) Or (Dir = "Out") And (Ypos <= (-WinHeight))
@@ -171,7 +174,11 @@ toggleScript(state) {
 		WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders
 		; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
 		;if (OrigYpos >= 0 or OrigWinWidth < ScreenWidth)
-				WinMove, ahk_pid %hw_mintty%, , ScreenLeft, -%heightConsoleWindow%, ScreenWidth, %heightConsoleWindow% ; resize/move
+        
+        WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
+        WinWidth := ScreenWidth * initialWidth/100
+
+				WinMove, ahk_pid %hw_mintty%, , WinLeft, -%heightConsoleWindow%, WinWidth, %heightConsoleWindow% ; resize/move
 		
 		scriptEnabled := True
 		Menu, Tray, Check, Enabled
@@ -304,6 +311,7 @@ SaveSettings() {
 	IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
 	IniWrite, %startHidden%, %iniFile%, Display, start_hidden
 	IniWrite, %initialHeight%, %iniFile%, Display, initial_height
+	IniWrite, %initialWidth%, %iniFile%, Display, initial_width
 	IniWrite, %pinned%, %iniFile%, Display, pinned_by_default
 	IniWrite, %animationStep%, %inifile%, Display, animation_step
 	IniWrite, %animationTimeout%, %iniFile%, Display, animation_timeout
@@ -343,12 +351,14 @@ OptionsGui() {
 		Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
 		Gui, Add, CheckBox, x22 y180 w100 h30 Vpinned Checked%pinned%, Pinned
 		Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
-		Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
-		Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
+		Gui, Add, Text, x22 y250 w90 h20 , Initial Height (px):
+		Gui, Add, Text, x112 y250 w90 h20 , Initial Width (`%):
+		Gui, Add, Edit, x22 y270 w80 h20 VinitialHeight, %initialHeight%
+		Gui, Add, Edit, x112 y270 w80 h20 VinitialWidth, %initialWidth%
 		Gui, Add, Text, x232 y170 w220 h20 , Animation Delta (px):
 		Gui, Add, Text, x232 y220 w220 h20 , Animation Time (ms):
-		Gui, Add, Slider, x232 y190 w220 h30 VanimationStep Range5-50, %animationStep%
-		Gui, Add, Slider, x232 y240 w220 h30 VanimationTimeout Range5-50, %animationTimeout%
+		Gui, Add, Slider, x232 y190 w220 h30 VanimationStep Range5-200, %animationStep%
+		Gui, Add, Slider, x232 y240 w220 h30 VanimationTimeout Range1-50, %animationTimeout%
 		Gui, Add, Text, x232 y280 w220 h20 +Center, Animation Speed = Delta / Time
 	}
 	; Generated using SmartGUI Creator 4.0
