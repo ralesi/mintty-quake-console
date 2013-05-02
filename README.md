@@ -28,7 +28,9 @@ note: after manually changing the ini file, reload the script by right-clicking 
 
 **initial_height** = height (in pixels) of the mintty console  
 
-**pinned_by_default** = set to 0 to automatically hide mintty when it loses focus
+**initial_width** = width (percentage of screen width) of the mintty console  
+
+**autohide_by_default** = set to 1 to automatically hide mintty when it loses focus
 
 **animation_step** = number of pixels to shift each step of the slide animation  
 

@@ -23,7 +23,7 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;*******************************************************************************
 ;				Preferences & Variables
 ;*******************************************************************************
-VERSION := 1.1
+VERSION := 1.2
 iniFile := "mintty-quake-console.ini"
 IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
 IniRead, minttyArgs, %iniFile%, General, mintty_args, -
@@ -31,7 +31,8 @@ IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, initialHeight, %iniFile%, Display, initial_height, 380
-IniRead, pinned, %iniFile%, Display, pinned_by_default, 1
+IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
+IniRead, autohide, %iniFile%, Display, autohide_by_default, 0
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IfNotExist %iniFile%
@@ -44,8 +45,9 @@ IfNotExist %iniFile%
 ; minttyPath := cygwinBinDir . "\mintty.exe /bin/zsh -li"
 minttyPath_args := minttyPath . " " . minttyArgs
 
-; initial height of console window
+; initial height and width of console window
 heightConsoleWindow := initialHeight
+widthConsoleWindow := initialWidth
 
 isVisible := False
 
@@ -65,9 +67,9 @@ Menu, Tray, Tip, mintty-quake-console %VERSION%
 Menu, Tray, Add, Show/Hide, ToggleVisible
 Menu, Tray, Add, Enabled, ToggleScriptState
 Menu, Tray, Check, Enabled
-Menu, Tray, Add, Pinned, TogglePinned
-if (pinned)
-	Menu, Tray, Check, Pinned
+Menu, Tray, Add, Auto-Hide, ToggleAutoHide
+if (autohide)
+    Menu, Tray, Check, Auto-Hide
 Menu, Tray, Add
 Menu, Tray, Add, Options, ShowOptionsGui
 Menu, Tray, Add, About, AboutDlg
@@ -124,12 +126,13 @@ toggle()
 
 Slide(Window, Dir)
 {
-	global animationStep, animationTimeout, pinned, isVisible, ScreenTop, ScreenLeft, ScreenWidth
+	global animationStep, animationTimeout, autohide, isVisible, ScreenTop, ScreenLeft, ScreenWidth
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
+	left := ScreenLeft + ((ScreenWidth - width) /  2)
 	If (Dir = "In") And (Ypos < 0)
 		WinShow %Window%
-	If (Xpos != ScreenLeft)
-		WinMove, %Window%,,ScreenLeft
+	If (Xpos != %left%)
+		WinMove, %Window%,,%left%
 	Loop
 	{
 	  If (Dir = "In") And (Ypos >= ScreenTop) Or (Dir = "Out") And (Ypos <= (-WinHeight))
@@ -144,13 +147,13 @@ Slide(Window, Dir)
 
 	If (Dir = "In") And (Ypos >= ScreenTop) {
 		WinMove, %Window%,,, ScreenTop
-		if (!pinned)
+		if (autohide)
 			SetTimer, HideWhenInactive, 250
 		isVisible := True
 	}
 	If (Dir = "Out") And (Ypos <= (-WinHeight)) {
 		WinHide %Window%
-		if (!pinned)
+		if (autohide)
 			SetTimer, HideWhenInactive, Off
 		isVisible := False
 	}
@@ -166,12 +169,11 @@ toggleScript(state) {
 			return
 		}
 		WinHide ahk_pid %hw_mintty%
-		;WinSet, Style, -0xC00000, ahk_pid %hw_mintty% ; hide caption/title
-		;WinSet, Style, -0x40000, ahk_pid %hw_mintty% ; hide thick border
-		WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders
-		; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
-		;if (OrigYpos >= 0 or OrigWinWidth < ScreenWidth)
-				WinMove, ahk_pid %hw_mintty%, , ScreenLeft, -%heightConsoleWindow%, ScreenWidth, %heightConsoleWindow% ; resize/move
+		WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
+
+		width := ScreenWidth * widthConsoleWindow / 100
+		left := ScreenLeft + ((ScreenWidth - width) /  2)
+		WinMove, ahk_pid %hw_mintty%, , %left%, -%heightConsoleWindow%, %width%, %heightConsoleWindow% ; resize/move
 		
 		scriptEnabled := True
 		Menu, Tray, Check, Enabled
@@ -185,8 +187,7 @@ toggleScript(state) {
 		Slide("ahk_pid" . hw_mintty, "In")
 	}
 	else if (state = "off") {
-		WinSet, Style, +0xC00000, ahk_pid %hw_mintty% ; show caption/title
-		WinSet, Style, +0x40000, ahk_pid %hw_mintty% ; show thick border
+	        WinSet, Style, +0xC40000, ahk_pid %hw_mintty% ; show window borders and caption/title
 		if (OrigYpos >= 0)
 			WinMove, ahk_pid %hw_mintty%, , %OrigXpos%, %OrigYpos%, %OrigWinWidth%, %OrigWinHeight% ; restore size / position
 		else
@@ -224,9 +225,9 @@ ToggleScriptState:
 		toggleScript("on")
 return
 
-TogglePinned:
-	pinned := !pinned
-	Menu, Tray, ToggleCheck, Pinned
+ToggleAutoHide:
+	autohide := !autohide
+	Menu, Tray, ToggleCheck, Auto-Hide
 	SetTimer, HideWhenInactive, Off
 return
 
@@ -304,7 +305,8 @@ SaveSettings() {
 	IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
 	IniWrite, %startHidden%, %iniFile%, Display, start_hidden
 	IniWrite, %initialHeight%, %iniFile%, Display, initial_height
-	IniWrite, %pinned%, %iniFile%, Display, pinned_by_default
+	IniWrite, %initialWidth%, %iniFile%, Display, initial_width
+	IniWrite, %autohide%, %iniFile%, Display, autohide_by_default
 	IniWrite, %animationStep%, %inifile%, Display, animation_step
 	IniWrite, %animationTimeout%, %iniFile%, Display, animation_timeout
 	CheckWindowsStartup(startWithWindows)
@@ -330,7 +332,7 @@ OptionsGui() {
 	global
 	If not WinExist("ahk_id" GuiID) {
 		Gui, Add, GroupBox, x12 y10 w450 h110 , General
-		Gui, Add, GroupBox, x12 y130 w450 h180 , Display
+        	Gui, Add, GroupBox, x12 y130 w450 h220 , Display
 		Gui, Add, Button, x242 y360 w100 h30 Default, Save
 		Gui, Add, Button, x362 y360 w100 h30 , Cancel
 		Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
@@ -341,10 +343,12 @@ OptionsGui() {
 		Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
 		Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
 		Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
-		Gui, Add, CheckBox, x22 y180 w100 h30 Vpinned Checked%pinned%, Pinned
+        	Gui, Add, CheckBox, x22 y180 w130 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
 		Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
 		Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
 		Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
+	        Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
+	        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %initialWidth%
 		Gui, Add, Text, x232 y170 w220 h20 , Animation Delta (px):
 		Gui, Add, Text, x232 y220 w220 h20 , Animation Time (ms):
 		Gui, Add, Slider, x232 y190 w220 h30 VanimationStep Range5-50, %animationStep%
