@@ -3,8 +3,7 @@
 A little [AutoHotkey](http://www.autohotkey.com/) script that enables a quake-style console for [mintty](http://code.google.com/p/mintty/) (like [Visor](http://visor.binaryage.com/) for OS X)
 
 ## Requirements
-1. [Cygwin](http://www.cygwin.com/)
-2. [mintty](http://code.google.com/p/mintty/) (installed through Cygwin)
+- [mintty](http://code.google.com/p/mintty/) (installed through [Cygwin](http://www.cygwin.com) or [MSYS](http://www.mingw.org/wiki/MSYS))
 
 ## Usage
 download and run **mintty-quake-console.exe**
@@ -36,6 +35,10 @@ note: after manually changing the ini file, reload the script by right-clicking 
 
 **animation_timeout** = how long (in ms) to wait between each animation_step
 
+**animation_mode_slide** = set to 1 to use sliding animation (up/down)
+
+**animation_mode_fade** = set to 1 to use fading animation (in/out)
+
 ## Tips
 
 Use **Ctrl+Alt+Numpad(+/-)** to increase or decrease the console height
@@ -49,4 +52,6 @@ Download my [minttyrc](https://github.com/lonepie/dotfiles/raw/master/minttyrc) 
 	$ wget -O ~/.minttyrc https://github.com/lonepie/dotfiles/raw/master/minttyrc
 
 ## TO DO
-* add support for putty, or maybe even console2
+* pseudo-tabs implementation
+* create a port for puTTY/kiTTY
+* a port for Console2 or ConEmu?
