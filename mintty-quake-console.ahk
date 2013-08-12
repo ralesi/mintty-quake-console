@@ -33,8 +33,8 @@ IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, initialHeight, %iniFile%, Display, initial_height, 380
 IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
 IniRead, autohide, %iniFile%, Display, autohide_by_default, 0
-IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
-IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
+IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade, 0
+IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide, 1
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IfNotExist %iniFile%
@@ -126,7 +126,7 @@ toggle()
 
 Slide(Window, Dir)
 {
-	global animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans
+	global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans
 	WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
     WinSet, Transparent, %currentTrans%, %Window%
 
@@ -135,7 +135,7 @@ Slide(Window, Dir)
     If (Dir = "In") 
 	{
 	  WinShow %Window%
-	  WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
+	  WinLeft := ScreenLeft + (1 - initialWidth/100) * (ScreenWidth / 2)
 	  WinMove, %Window%,, WinLeft
 	}
 	Loop
@@ -159,7 +159,7 @@ Slide(Window, Dir)
       }
       else
       {
-          WinSet, Style, -0x040000, %Window% ; show window border
+          WinSet, Style, -0x040000, %Window% ; hide window border
           dRate := animationStep
           dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
           WinMove, %Window%,,, dY
@@ -168,16 +168,16 @@ Slide(Window, Dir)
 	  Sleep, %animationTimeout%
 	}
 
-      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans >= 255)
-      outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
+      inDoneConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans >= 255)
+      outDoneConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
-	If (Dir = "In") And inConditional {
+	If (Dir = "In") And inDoneConditional {
 		WinMove, %Window%,,, ScreenTop
 		if (autohide)
 			SetTimer, HideWhenInactive, 250
 		isVisible := True
 	}
-	If (Dir = "Out") And outConditional {
+	If (Dir = "Out") And outDoneConditional {
 		WinHide %Window%
 		if (autohide)
 			SetTimer, HideWhenInactive, Off
@@ -437,7 +437,7 @@ OptionsGui() {
 
 VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
 {
-  Coordmode, Mouse, Screen
+    Coordmode, Mouse, Screen
     MouseGetPos,x,y
     SysGet, m, MonitorCount
     ; Iterate through all monitors.
