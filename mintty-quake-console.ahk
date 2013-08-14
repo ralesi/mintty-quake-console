@@ -33,8 +33,8 @@ IniRead, startHidden, %iniFile%, Display, start_hidden, 1
 IniRead, initialHeight, %iniFile%, Display, initial_height, 380
 IniRead, initialWidth, %iniFile%, Display, initial_width, 100 ; percent
 IniRead, autohide, %iniFile%, Display, autohide_by_default, 0
-IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade
-IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide
+IniRead, animationModeFade, %iniFile%, Display, animation_mode_fade, 0
+IniRead, animationModeSlide, %iniFile%, Display, animation_mode_slide, 1
 IniRead, animationStep, %iniFile%, Display, animation_step, 20
 IniRead, animationTimeout, %iniFile%, Display, animation_timeout, 10
 IfNotExist %iniFile%
@@ -126,7 +126,7 @@ toggle()
 
 Slide(Window, Dir)
 {
-    global animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, origTrans
+    global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, origTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
     if (animationModeFade = 1)
         WinSet, Transparent, %currentTrans%, %Window%
@@ -149,7 +149,7 @@ Slide(Window, Dir)
 
       if (animationModeFade = 1)
       {
-        WinSet, Style, -0x040000, %Window% ; hide window border
+          WinSet, Style, +0x040000, %Window% ; show window border
           WinMove, %Window%,, WinLeft, ScreenTop
           dRate := animationStep/300*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
@@ -160,7 +160,6 @@ Slide(Window, Dir)
       }
       else
       {
-          WinSet, Style, -0x040000, %Window% ; hide window border
           dRate := animationStep
           dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
           WinMove, %Window%,,, dY
@@ -173,10 +172,12 @@ Slide(Window, Dir)
       outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
     If (Dir = "In") And inConditional {
+        WinSet, Style, -0x040000, %Window% ; hide window border
         WinMove, %Window%,,, ScreenTop
         if (autohide)
             SetTimer, HideWhenInactive, 250
         isVisible := True
+        
     }
     If (Dir = "Out") And outConditional {
         WinHide %Window%
