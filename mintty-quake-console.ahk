@@ -85,6 +85,7 @@ return
 ;*******************************************************************************
 ;               Functions / Labels
 ;*******************************************************************************
+
 init()
 {
     global
@@ -124,9 +125,11 @@ toggle()
     }
 }
 
+LShift & RShift::Reload
+
 Slide(Window, Dir)
 {
-    global animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, origTrans
+    global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, origTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
     if (animationModeFade = 1)
         WinSet, Transparent, %currentTrans%, %Window%
@@ -149,14 +152,22 @@ Slide(Window, Dir)
 
       if (animationModeFade = 1)
       {
-        WinSet, Style, -0x040000, %Window% ; hide window border
+          DetectHiddenWindows, on
+          ; WinSet, Style, -0x200000, %Window% ; toggle v scrollbar
+          WinSet, Style, +0x040000, %Window% ; hide window border
           WinMove, %Window%,, WinLeft, ScreenTop
-          dRate := animationStep/300*255
+          dRate := animationStep/500*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-          dT := (dT < 0) ? 0 : (dT > origTrans) ? origTrans : dT
+          dT := (dT < 0) ? 0 : ((dT > origTrans) ? origTrans : dT)
+
+          Tooltip dT %dT%
+          Sleep, 100
 
           WinSet, Transparent, %dT%, %Window%
+          WinSet, Redraw,, %Window%
           currentTrans := dT
+          ; WinSet, Style, +0x800000, %Window% ; make thin border
+          ; WinSet, Style, -0x040000, %Window% ; hide window border
       }
       else
       {
@@ -195,8 +206,12 @@ toggleScript(state) {
             init()
             return
         }
-        ;currentTrans := 255
         WinGet, origTrans, Transparent, ahk_pid %hw_mintty%
+        If (origTrans="Off" Or origTrans="")
+            origTrans=255
+
+        currentTrans:=origTrans
+
         WinHide ahk_pid %hw_mintty%
         WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
 
