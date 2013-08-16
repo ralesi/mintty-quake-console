@@ -132,7 +132,11 @@ Slide(Window, Dir)
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, origTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
     if (animationModeFade = 1)
+    {
+        WinSet, Style, +0x040000, %Window% ; hide window border
         WinSet, Transparent, %currentTrans%, %Window%
+        WinSet, Style, -0x040000, %Window% ; hide window border
+    }
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
@@ -154,20 +158,27 @@ Slide(Window, Dir)
       {
           DetectHiddenWindows, on
           ; WinSet, Style, -0x200000, %Window% ; toggle v scrollbar
-          WinSet, Style, +0x040000, %Window% ; hide window border
+          ; if (currentTrans = 255) or (currentTrans = 0)
+        ; {
+         ; WinHide, %Window%
+          ;   dT:=(currentTrans=255)?255:1
+          ; WinSet, Transparent, %dT%, %Window%
+          ;   WinSet, Style, -0x040000, %Window% ; hide window border
+          ;   WinShow %Window%
+        ; }
           WinMove, %Window%,, WinLeft, ScreenTop
           dRate := animationStep/500*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
           dT := (dT < 0) ? 0 : ((dT > origTrans) ? origTrans : dT)
 
-          Tooltip dT %dT%
-          Sleep, 100
+          ; Tooltip dT %dT%
+          ; Sleep, 100
 
           WinSet, Transparent, %dT%, %Window%
           WinSet, Redraw,, %Window%
           currentTrans := dT
-          ; WinSet, Style, +0x800000, %Window% ; make thin border
-          ; WinSet, Style, -0x040000, %Window% ; hide window border
+          WinSet, Style, +0x800000, %Window% ; make thin border
+          WinSet, Style, -0x040000, %Window% ; hide window border
       }
       else
       {
