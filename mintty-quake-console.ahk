@@ -51,7 +51,7 @@ minttyPath_args := minttyPath . " " . minttyArgs
 ; initial height and width of console window
 heightConsoleWindow := initialHeight
 widthConsoleWindow := initialWidth
-origTrans := initialTrans
+
 isVisible := False
 
 ;*******************************************************************************
@@ -86,7 +86,6 @@ return
 ;*******************************************************************************
 ;               Functions / Labels
 ;*******************************************************************************
-
 init()
 {
     global
@@ -126,27 +125,23 @@ toggle()
     }
 }
 
-LShift & RShift::Reload
-
 Slide(Window, Dir)
 {
-    global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, origTrans
+    global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-    if (animationModeFade = 1)
+
+    WinGet, Transparent, Transparent, %Window%
+    if Transparent =
     {
-        ; DetectHiddenWindows, On
-        WinGet, Transparent, Transparent, %Window%
-        if Transparent =
-        {
-            ; Solution for Windows 8 to find window without borders
-            WinSet, Style, +0x040000, %Window% ; hide window border
-            WinSet, Transparent, %currentTrans%, %Window%
-            WinSet, Style, -0x040000, %Window% ; hide window border
-        }
+        ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
+        WinSet, Style, +0x040000, %Window% ; hide window border
+        WinSet, Transparent, %currentTrans%, %Window%
+        WinSet, Style, -0x040000, %Window% ; hide window border
     }
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
+    ; Multi monitor support.  Always move to current window
     If (Dir = "In")
     {
       WinShow %Window%
@@ -155,7 +150,7 @@ Slide(Window, Dir)
     }
     Loop
     {
-      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == origTrans)
+      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
       outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
 
       If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
@@ -163,33 +158,17 @@ Slide(Window, Dir)
 
       if (animationModeFade = 1)
       {
-          ; DetectHiddenWindows, on
-          ; WinSet, Style, -0x200000, %Window% ; toggle v scrollbar
-          ; if (currentTrans = 255) or (currentTrans = 0)
-        ; {
-         ; WinHide, %Window%
-          ;   dT:=(currentTrans=255)?255:1
-          ; WinSet, Transparent, %dT%, %Window%
-          ;   WinSet, Style, -0x040000, %Window% ; hide window border
-          ;   WinShow %Window%
-        ; }
+          ; Move to the top in cases where Slide was initially selected
           WinMove, %Window%,, WinLeft, ScreenTop
-          dRate := animationStep/500*255
+          dRate := animationStep/300*255
           dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-          dT := (dT < 0) ? 0 : ((dT > origTrans) ? origTrans : dT)
-
-          ; Tooltip dT %dT%
-          ; Sleep, 100
+          dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
 
           WinSet, Transparent, %dT%, %Window%
-          ; WinSet, Redraw,, %Window%
           currentTrans := dT
-          ; WinSet, Style, +0x800000, %Window% ; make thin border
-          ; WinSet, Style, -0x040000, %Window% ; hide window border
       }
       else
       {
-          WinSet, Style, -0x040000, %Window% ; hide window border
           dRate := animationStep
           dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
           WinMove, %Window%,,, dY
@@ -198,16 +177,13 @@ Slide(Window, Dir)
       Sleep, %animationTimeout%
     }
 
-      inDoneConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans >= origTrans)
-      outDoneConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
-
-    If (Dir = "In") And inDoneConditional {
+    If (Dir = "In")  {
         WinMove, %Window%,,, ScreenTop
         if (autohide)
             SetTimer, HideWhenInactive, 250
         isVisible := True
     }
-    If (Dir = "Out") And outDoneConditional {
+    If (Dir = "Out")  {
         WinHide %Window%
         if (autohide)
             SetTimer, HideWhenInactive, Off
@@ -224,8 +200,8 @@ toggleScript(state) {
             init()
             return
         }
-        WinSet, Transparent, %origTrans%, ahk_pid %hw_mintty%
-        currentTrans:=origTrans
+        WinSet, Transparent, %initialTrans%, ahk_pid %hw_mintty%
+        currentTrans:=initialTrans
 
         WinHide ahk_pid %hw_mintty%
         WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
@@ -332,9 +308,6 @@ return
 ;*******************************************************************************
 #IfWinActive ahk_class mintty
 ; why this method doesn't work, I don't know...
-; Hotkey, IfWinActive, ahk_pid %hw_mintty%
-; Hotkey, ^!NumpadAdd, IncreaseHeight
-; Hotkey, ^!NumpadSub, DecreaseHeight
 ; IncreaseHeight:
 ^!NumpadAdd::
 ^+=::
