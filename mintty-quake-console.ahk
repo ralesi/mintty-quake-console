@@ -92,23 +92,25 @@ init()
     initCount++
     ; get last active window
     WinGet, hw_current, ID, A
-    if !WinExist("ahk_class mintty") {
-        Run %minttyPath_args%, %cygwinBinDir%, Hide, hw_mintty
+    if !WinExist("ahk_class Console_2_Main") {
+        Run, %minttyPath_args%, , Show, hw_mintty
         WinWait ahk_pid %hw_mintty%
     }
     else {
-        WinGet, hw_mintty, PID, ahk_class mintty
+        WinGet, hw_mintty, PID, ahk_class Console_2_Main
     }
 
 
     WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
+    
     toggleScript("init")
 }
 
 toggle()
 {
     global
-
+;Tooltip % hw_mintty
+;WinMove, ahk_class Console_2_Main, , 10, 110
     IfWinActive ahk_pid %hw_mintty%
     {
         Slide("ahk_pid" . hw_mintty, "Out")
@@ -129,7 +131,6 @@ Slide(Window, Dir)
 {
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-
     WinGet, Transparent, Transparent, %Window%
     if Transparent =
     {
