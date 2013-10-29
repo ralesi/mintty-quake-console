@@ -1,10 +1,10 @@
-; Mintty quake console: Visor-like functionality for Windows
+; console quake console: Visor-like functionality for Windows
 ; Version: 1.3
 ; Author: Jon Rogers (lonepie@gmail.com)
-; URL: https://github.com/lonepie/mintty-quake-console
+; URL: https://github.com/lonepie/console-quake-console
 ; Credits:
-;   Originally forked from: https://github.com/marcharding/mintty-quake-console
-;   mintty: http://code.google.com/p/mintty/
+;   Originally forked from: https://github.com/marcharding/console-quake-console
+;   console: http://code.google.com/p/console/
 ;   Visor: http://visor.binaryage.com/
 
 ;*******************************************************************************
@@ -24,9 +24,10 @@ cygwinBinDir := cygwinRootDir . "\bin"
 ;               Preferences & Variables
 ;*******************************************************************************
 VERSION := 1.3
-iniFile := A_ScriptDir . "\mintty-quake-console.ini"
-IniRead, minttyPath, %iniFile%, General, mintty_path, % cygwinBinDir . "\mintty.exe"
-IniRead, minttyArgs, %iniFile%, General, mintty_args, -
+iniFile := A_ScriptDir . "\ahk-quake-console.ini"
+IniRead, consolePath, %iniFile%, General, console_path, % cygwinBinDir . "\console.exe"
+IniRead, consoleClass, %iniFile%, General, console_class, -
+IniRead, consoleArgs, %iniFile%, General, console_args, -
 IniRead, consoleHotkey, %iniFile%, General, hotkey, ^``
 IniRead, startWithWindows, %iniFile%, Display, start_with_windows, 0
 IniRead, startHidden, %iniFile%, Display, start_hidden, 1
@@ -43,10 +44,10 @@ IfNotExist %iniFile%
     SaveSettings()
 }
 
-; path to mintty (same folder as script), start with default shell
-; minttyPath := cygwinBinDir . "\mintty.exe -"
-; minttyPath := cygwinBinDir . "\mintty.exe /bin/zsh -li"
-minttyPath_args := minttyPath . " " . minttyArgs
+; path to console (same folder as script), start with default shell
+; consolePath := cygwinBinDir . "\console.exe -"
+; consolePath := cygwinBinDir . "\console.exe /bin/zsh -li"
+consolePath_args := consolePath . " " . consoleArgs
 
 ; initial height and width of console window
 heightConsoleWindow := initialHeight
@@ -66,7 +67,7 @@ if !InStr(A_ScriptName, ".exe")
     Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
 Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
-Menu, Tray, Tip, mintty-quake-console %VERSION%
+Menu, Tray, Tip, ahk-quake-console %VERSION%
 Menu, Tray, Click, 1
 Menu, Tray, Add, Show/Hide, ToggleVisible
 Menu, Tray, Default, Show/Hide
@@ -93,15 +94,18 @@ init()
     ; get last active window
     WinGet, hw_current, ID, A
     if !WinExist("ahk_class Console_2_Main") {
-        Run, %minttyPath_args%, , Show, hw_mintty
-        WinWait ahk_pid %hw_mintty%
+        Run, %consolePath_args%, %A_MyDocuments% , , phw_console
+        WinWait ahk_pid %phw_console%
+        Sleep, 500
     }
     else {
-        WinGet, hw_mintty, PID, ahk_class Console_2_Main
+        WinGet, phw_console, PID, ahk_class Console_2_Main
+        
     }
-
-
-    WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
+    
+    WinGet, hw_console, ID, ahk_class Console_2_Main
+    
+    WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_id %hw_console%
     
     toggleScript("init")
 }
@@ -109,11 +113,11 @@ init()
 toggle()
 {
     global
-;Tooltip % hw_mintty
-;WinMove, ahk_class Console_2_Main, , 10, 110
-    IfWinActive ahk_pid %hw_mintty%
+;Tooltip % hw_console
+;WinMove, ahk_class %console_class%, , 10, 110
+    IfWinActive ahk_id %hw_console%
     {
-        Slide("ahk_pid" . hw_mintty, "Out")
+        Slide("ahk_id" . hw_console, "Out")
         ; reset focus to last active window
         WinActivate, ahk_id %hw_current%
     }
@@ -122,8 +126,8 @@ toggle()
         ; get last active window
         WinGet, hw_current, ID, A
 
-        WinActivate ahk_pid %hw_mintty%
-        Slide("ahk_pid" . hw_mintty, "In")
+        WinActivate ahk_id %hw_console%
+        Slide("ahk_id" . hw_console, "In")
     }
 }
 
@@ -195,23 +199,23 @@ Slide(Window, Dir)
 toggleScript(state) {
     ; enable/disable script effects, hotkeys, etc
     global
-    ; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_pid %hw_mintty%
+    ; WinGetPos, Xpos, Ypos, WinWidth, WinHeight, ahk_id %hw_console%
     if(state = "on" or state = "init") {
-        If !WinExist("ahk_pid" . hw_mintty) {
+        If !WinExist("ahk_id" . hw_console) {
             init()
             return
         }
-        WinSet, Transparent, %initialTrans%, ahk_pid %hw_mintty%
+        WinSet, Transparent, %initialTrans%, ahk_id %hw_console%
         currentTrans:=initialTrans
 
-        WinHide ahk_pid %hw_mintty%
-        WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
+        WinHide ahk_id %hw_console%
+        WinSet, Style, -0xC40000, ahk_id %hw_console% ; hide window borders and caption/title
 
         VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
         width := ScreenWidth * widthConsoleWindow / 100
         left := ScreenLeft + ((ScreenWidth - width) /  2)
-        WinMove, ahk_pid %hw_mintty%, , %left%, -%heightConsoleWindow%, %width%, %heightConsoleWindow% ; resize/move
+        WinMove, ahk_id %hw_console%, , %left%, -%heightConsoleWindow%, %width%, %heightConsoleWindow% ; resize/move
 
         scriptEnabled := True
         Menu, Tray, Check, Enabled
@@ -220,26 +224,26 @@ toggleScript(state) {
             return
         }
 
-        WinShow ahk_pid %hw_mintty%
-        WinActivate ahk_pid %hw_mintty%
-        Slide("ahk_pid" . hw_mintty, "In")
+        WinShow ahk_id %hw_console%
+        WinActivate ahk_id %hw_console%
+        Slide("ahk_id" . hw_console, "In")
     }
     else if (state = "off") {
-            WinSet, Style, +0xC40000, ahk_pid %hw_mintty% ; show window borders and caption/title
+            WinSet, Style, +0xC40000, ahk_id %hw_console% ; show window borders and caption/title
         if (OrigYpos >= 0)
-            WinMove, ahk_pid %hw_mintty%, , %OrigXpos%, %OrigYpos%, %OrigWinWidth%, %OrigWinHeight% ; restore size / position
+            WinMove, ahk_id %hw_console%, , %OrigXpos%, %OrigYpos%, %OrigWinWidth%, %OrigWinHeight% ; restore size / position
         else
-            WinMove, ahk_pid %hw_mintty%, , %OrigXpos%, 100, %OrigWinWidth%, %OrigWinHeight%
-        WinShow, ahk_pid %hw_mintty% ; show window
+            WinMove, ahk_id %hw_console%, , %OrigXpos%, 100, %OrigWinWidth%, %OrigWinHeight%
+        WinShow, ahk_id %hw_console% ; show window
         scriptEnabled := False
         Menu, Tray, Uncheck, Enabled
     }
 }
 
 HideWhenInactive:
-    IfWinNotActive ahk_pid %hw_mintty%
+    IfWinNotActive ahk_id %hw_console%
     {
-        Slide("ahk_pid" . hw_mintty, "Out")
+        Slide("ahk_id" . hw_console, "Out")
         SetTimer, HideWhenInactive, Off
     }
 return
@@ -247,12 +251,12 @@ return
 ToggleVisible:
     if(isVisible)
     {
-        Slide("ahk_pid" . hw_mintty, "Out")
+        Slide("ahk_id" . hw_console, "Out")
     }
     else
     {
-        WinActivate ahk_pid %hw_mintty%
-        Slide("ahk_pid" . hw_mintty, "In")
+        WinActivate ahk_id %hw_console%
+        Slide("ahk_id" . hw_console, "In")
     }
 return
 
@@ -270,8 +274,10 @@ ToggleAutoHide:
 return
 
 ConsoleHotkey:
+    Random, OutputVar 
+    
     If (scriptEnabled) {
-        IfWinExist ahk_pid %hw_mintty%
+        IfWinExist ahk_id %hw_console%
         {
             toggle()
         }
@@ -285,7 +291,7 @@ return
 ExitSub:
     if A_ExitReason not in Logoff,Shutdown
     {
-        MsgBox, 4, mintty-quake-console, Are you sure you want to exit?
+        MsgBox, 4, console-quake-console, Are you sure you want to exit?
         IfMsgBox, No
             return
         toggleScript("off")
@@ -297,7 +303,7 @@ Reload
 return
 
 AboutDlg:
-    MsgBox, 64, About, mintty-quake-console AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
+    MsgBox, 64, About, console-quake-console AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/console-quake-console
 return
 
 ShowOptionsGui:
@@ -307,39 +313,40 @@ return
 ;*******************************************************************************
 ;               Extra Hotkeys
 ;*******************************************************************************
-#IfWinActive ahk_class mintty
+#If WinActive("ahk_class Console_2_Main")
 ; why this method doesn't work, I don't know...
 ; IncreaseHeight:
 ^!NumpadAdd::
 ^+=::
-    if(WinActive("ahk_pid" . hw_mintty)) {
+    if(WinActive("ahk_id" . hw_console)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
         if(heightConsoleWindow < ScreenHeight) {
             heightConsoleWindow += animationStep
-            WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
+            WinMove, ahk_id %hw_console%,,,,, heightConsoleWindow
         }
     }
 return
 ; DecreaseHeight:
 ^!NumpadSub::
 ^+-::
-    if(WinActive("ahk_pid" . hw_mintty)) {
+    if(WinActive("ahk_id" . hw_console)) {
         if(heightConsoleWindow > 100) {
             heightConsoleWindow -= animationStep
-            WinMove, ahk_pid %hw_mintty%,,,,, heightConsoleWindow
+            WinMove, ahk_id %hw_console%,,,,, heightConsoleWindow
         }
     }
 return
-#IfWinActive
+#If
 
 ;*******************************************************************************
 ;               Options
 ;*******************************************************************************
 SaveSettings() {
     global
-    IniWrite, %minttyPath%, %iniFile%, General, mintty_path
-    IniWrite, %minttyArgs%, %iniFile%, General, mintty_args
+    IniWrite, %consolePath%, %iniFile%, General, console_path
+    IniWrite, %consoleClass%, %iniFile%, General, console_class
+    IniWrite, %consoleArgs%, %iniFile%, General, console_args
     IniWrite, %consoleHotkey%, %iniFile%, General, hotkey
     IniWrite, %startWithWindows%, %iniFile%, Display, start_with_windows
     IniWrite, %startHidden%, %iniFile%, Display, start_hidden
@@ -377,11 +384,11 @@ OptionsGui() {
             Gui, Add, GroupBox, x12 y130 w450 h250 , Display
         Gui, Add, Button, x242 y390 w100 h30 Default, Save
         Gui, Add, Button, x362 y390 w100 h30 , Cancel
-        Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
-        Gui, Add, Edit, x92 y30 w250 h20 VminttyPath, %minttyPath%
+        Gui, Add, Text, x22 y30 w70 h20 , console Path:
+        Gui, Add, Edit, x92 y30 w250 h20 VconsolePath, %consolePath%
         Gui, Add, Button, x352 y30 w100 h20, Browse
-        Gui, Add, Text, x22 y60 w100 h20 , Mintty Arguments:
-        Gui, Add, Edit, x122 y60 w330 h20 VminttyArgs, %minttyArgs%
+        Gui, Add, Text, x22 y60 w100 h20 , console Arguments:
+        Gui, Add, Edit, x122 y60 w330 h20 VconsoleArgs, %consoleArgs%
         Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
         Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
         Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
@@ -425,9 +432,9 @@ OptionsGui() {
     return
 
     ButtonBrowse:
-        FileSelectFile, SelectedPath, 3, %A_MyDocuments%, Path to mintty.exe, Executables (*.exe)
+        FileSelectFile, SelectedPath, 3, %A_MyDocuments%, Path to console.exe, Executables (*.exe)
         if SelectedPath !=
-            GuiControl,, MinttyPath, %SelectedPath%
+            GuiControl,, consolePath, %SelectedPath%
     return
 
     GuiClose:
